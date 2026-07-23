@@ -49,7 +49,7 @@ public class AuthService {
         throw new RuntimeException("Email already exists!!");
 
     }
-    if(userRepo.existsByEmaplyeeCode(request.getEmployeeCode())){
+    if(userRepo.existsByEmployeeCode(request.getEmployeeCode())){
         throw new RuntimeException("EmployeeCode alredy exists!!");
     }
    Department department = departmentRepo.findById(request.getDepartment())
