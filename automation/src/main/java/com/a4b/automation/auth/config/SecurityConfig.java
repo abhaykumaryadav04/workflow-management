@@ -12,7 +12,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.a4b.automation.auth.jwt.JwtAuthenticationFilter;
 import com.a4b.automation.auth.service.CustumUserDetailsService;
 
 
@@ -24,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
     @Autowired
     private CustumUserDetailsService custumUserDetailsService;
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder() ;
@@ -32,6 +36,8 @@ public class SecurityConfig {
     public  SecurityFilterChain securityFilterChain(HttpSecurity http){
         http.csrf(csrf-> csrf.disable())
             .authorizeHttpRequests(auth->auth.requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated())
+            .authenticationProvider(authProvider())
+            .addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter.class)
             ;
             return http.build();
     }
