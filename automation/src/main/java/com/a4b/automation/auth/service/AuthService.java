@@ -58,13 +58,13 @@ Role role = roleRepo.findById(request.getRole())
                       .role(role)
                       .secondName(request.getSecondName())
                       .status(UserStatus.ACTIVE)
+                      .email(request.getEmail())
                       .updaedAt(LocalDateTime.now())
                       .createdAt(LocalDateTime.now())
                       .build();
         userRepo.save(user);
-        String token=jwtService.
-
-     
+       String token="register succesfully";
+        return new AuthResponse(token);
       
     }
 

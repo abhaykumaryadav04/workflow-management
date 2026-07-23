@@ -1,6 +1,6 @@
 package com.a4b.automation.auth.controller;
 
-import org.apache.coyote.BadRequestException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
@@ -26,12 +26,12 @@ private AuthService authService;
 
       @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse register( @RequestBody RegisterRequest request) throws BadRequestException {
+    public AuthResponse register( @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
       @PostMapping("/login")
       @ResponseStatus(HttpStatus.ACCEPTED)
-    public AuthResponse login( @RequestBody LoginRequest request) throws BadRequestException {
+    public AuthResponse login( @RequestBody LoginRequest request) {
         return authService.login(request);
     }
   }

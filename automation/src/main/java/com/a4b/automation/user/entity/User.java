@@ -1,6 +1,12 @@
 package com.a4b.automation.user.entity;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.a4b.automation.department.entity.Department;
 import com.a4b.automation.role.entity.Role;
@@ -22,7 +28,7 @@ import lombok.Data;
 @Entity
 @Data
 @Builder
-public class User {
+public class User  implements UserDetails{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,6 +39,7 @@ public class User {
     private String secondName;
     @Column(nullable = false)
     private String password;
+    private String email;
     @Column(nullable = false,unique = true)
     private String phone;
     private String deginagation;
@@ -46,6 +53,14 @@ public class User {
     private Role role;
     private LocalDateTime createdAt;
     private LocalDateTime updaedAt;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+       return List.of(new SimpleGrantedAuthority(role.getName()));
+    }
+    @Override
+    public String getUsername() {
+       return email;
+    }
 
 
 

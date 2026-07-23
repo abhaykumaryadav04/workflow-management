@@ -3,7 +3,7 @@ package com.a4b.automation.auth.jwt;
 
 
 import java.util.Date;
-import java.util.Map;
+
 
 
 import javax.crypto.SecretKey;
@@ -24,7 +24,7 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    public String generateToken(Map<String, Object> extraClaims,UserDetails userDetails){
+    public String generateToken(UserDetails userDetails){
         return Jwts.builder()
                    .subject(userDetails.getUsername())
                    
