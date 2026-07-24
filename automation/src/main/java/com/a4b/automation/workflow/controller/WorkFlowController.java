@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.a4b.automation.workflow.dto.CreateWorkflowRequest;
-import com.a4b.automation.workflow.entity.WorkFlowRequests;
+import com.a4b.automation.workflow.dto.WorkFlowRequestResponse;
+
+import com.a4b.automation.workflow.mapper.WorkFlowmapper;
 import com.a4b.automation.workflow.service.WorkFlowService;
 
 
@@ -22,21 +24,23 @@ import com.a4b.automation.workflow.service.WorkFlowService;
 public class WorkFlowController {
     @Autowired
     private WorkFlowService workFlowService;
+    @Autowired
+    private WorkFlowmapper mapper;
     @PostMapping("/register")
-    public ResponseEntity<WorkFlowRequests> register(@RequestBody CreateWorkflowRequest request){
-        return ResponseEntity.ok(workFlowService.submitRequests(request));
+    public ResponseEntity<WorkFlowRequestResponse> register(@RequestBody CreateWorkflowRequest request){
+        return ResponseEntity.ok(mapper.requestToWorkFlowRequestResponse(workFlowService.submitRequests(request)));
     }
     @PutMapping("/requests/{id}/approve")
-    public ResponseEntity<WorkFlowRequests> approve(@PathVariable Long requestId,@RequestParam String remark){
-        return ResponseEntity.ok(workFlowService.approve(requestId, remark));
+    public ResponseEntity<WorkFlowRequestResponse> approve(@PathVariable Long requestId,@RequestParam String remark){
+        return ResponseEntity.ok(mapper.requestToWorkFlowRequestResponse(workFlowService.approve(requestId, remark)));
     }
     @PutMapping("/requests/{id}/reject")
-    public ResponseEntity<WorkFlowRequests> reject(@PathVariable Long requestId,@RequestParam String remark) {
-        return ResponseEntity.ok(workFlowService.reject(requestId, remark));
+    public ResponseEntity<WorkFlowRequestResponse> reject(@PathVariable Long requestId,@RequestParam String remark) {
+        return ResponseEntity.ok(mapper.requestToWorkFlowRequestResponse(workFlowService.reject(requestId, remark)));
 
     }
     @GetMapping("/requests/{id}")
-    public ResponseEntity<WorkFlowRequests> getRequest(
+    public ResponseEntity<WorkFlowRequestResponse> getRequest(
         @PathVariable Long id){
 
 }

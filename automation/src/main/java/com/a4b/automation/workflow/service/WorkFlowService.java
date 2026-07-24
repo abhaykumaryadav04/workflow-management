@@ -42,7 +42,7 @@ public class WorkFlowService {
     
     public WorkFlowRequests submitRequests(CreateWorkflowRequest request){
      WorkFlow workFlow=workFlowRepo.findById(request.getWorkflowId()).orElseThrow(()-> new RuntimeException("Aorkflow doesnot exists !!"));
-     User employee=userRepo.findById(request.getEmployeeId()).orElseGet(()-> new UsernameNotFoundException('Employee does not exists.'));
+     User employee=userRepo.findById(request.getEmployeeId()).orElseThrow(()-> new UsernameNotFoundException("Employee does not exists."));
       WorkflowsSteps workflowsSteps=workflowaStepsRepo.findByWorkflowAndStepOrder(workFlow, 1).orElseThrow(()-> new RuntimeException("Problem in workFlow"));
       WorkFlowRequests workFlowRequests=WorkFlowRequests.builder()
                                                         .employee(employee)
