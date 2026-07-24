@@ -1,8 +1,11 @@
 package com.a4b.automation.workflow.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +38,7 @@ public class WorkFlowService {
     private ApprovalHistoryRepo approvalHistoryRepo;
     @Autowired
     private UserRepo userRepo;
-
+    
     
     public WorkFlowRequests submitRequests(CreateWorkflowRequest request){
      WorkFlow workFlow=workFlowRepo.findById(request.getWorkflowId()).orElseThrow(()-> new RuntimeException("Aorkflow doesnot exists !!"));
@@ -60,6 +63,37 @@ public class WorkFlowService {
                                                 .build();
     approvalHistoryRepo.save(approvalHistory);
     return workFlowRequests;
-    }    
+    }   
+    public WorkFlowRequests approve(Long requestId,String remark){
+
+      
+        WorkFlowRequests requests=workFlowRequestRepo.findById(requestId).orElseThrow(()->new RuntimeException("NO request found"));
+        WorkflowsSteps currentSteps=requests.getCurrentStep();
+        Optional<WorkflowsSteps> nextStep = workflowaStepsRepo
+        .findByWorkflowAndStepOrder(
+                requests.getWorkFlow(),
+                currentSteps.getSteps() + 1
+        );
+        Authentication authentication =
+        SecurityContextHolder.getContext().getAuthentication();
+        User currUser=(User)authentication.getPrincipal();
+    ApprovalHistory history=ApprovalHistory.builder()
+                                           .action(ApprovalAction.APPROVAL)
+                                           .actionAt(LocalDateTime.now())
+                                           .remark(remark)
+                                           .user(currUser)
+                                           .workFlowRequests(requests)
+                                           .workflowsSteps(currentSteps)
+                                           .build();
+        approvalHistoryRepo.save(history);
+        if(nextStep.isPresent()){
+         requests.setCurrentStep(nextStep.get());
+         requests.setRequestStatus(RequestStatus.PENDING);
+        }else{
+            requests.setRequestStatus(RequestStatus.APPROVED);
+        }
+      return requests;
+
+    } 
 
 }

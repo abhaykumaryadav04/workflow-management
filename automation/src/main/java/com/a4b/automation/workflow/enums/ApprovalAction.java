@@ -7,5 +7,7 @@ public enum ApprovalAction {
 
     RETURNED,
 
-    CANCELLED
+    CANCELLED,
+    
+    APPROVAL
 }
