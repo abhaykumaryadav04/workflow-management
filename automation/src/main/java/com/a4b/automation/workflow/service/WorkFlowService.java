@@ -1,18 +1,29 @@
 package com.a4b.automation.workflow.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.a4b.automation.user.entity.User;
+import com.a4b.automation.user.repo.UserRepo;
 import com.a4b.automation.workflow.dto.CreateWorkflowRequest;
 import com.a4b.automation.workflow.entity.ApprovalHistory;
 import com.a4b.automation.workflow.entity.WorkFlow;
 import com.a4b.automation.workflow.entity.WorkFlowRequests;
 import com.a4b.automation.workflow.entity.WorkflowsSteps;
+import com.a4b.automation.workflow.enums.ApprovalAction;
+import com.a4b.automation.workflow.enums.RequestStatus;
+import com.a4b.automation.workflow.repo.ApprovalHistoryRepo;
 import com.a4b.automation.workflow.repo.WorkFlowRepo;
 import com.a4b.automation.workflow.repo.WorkFlowRequestRepo;
 import com.a4b.automation.workflow.repo.WorkflowaStepsRepo;
 
+import jakarta.transaction.Transactional;
+
 @Service
+@Transactional
 public class WorkFlowService {
     @Autowired
     private WorkFlowRepo workFlowRepo;
@@ -21,11 +32,34 @@ public class WorkFlowService {
     @Autowired
     private WorkflowaStepsRepo workflowaStepsRepo;
     @Autowired
-    private ApprovalHistory approvalHistory;
+    private ApprovalHistoryRepo approvalHistoryRepo;
+    @Autowired
+    private UserRepo userRepo;
+
     
     public WorkFlowRequests submitRequests(CreateWorkflowRequest request){
      WorkFlow workFlow=workFlowRepo.findById(request.getWorkflowId()).orElseThrow(()-> new RuntimeException("Aorkflow doesnot exists !!"));
-     WorkflowsSteps workflowsSteps=workflowaStepsRepo.findById(request.get)
-    }
+     User employee=userRepo.findById(request.getEmployeeId()).orElseGet(()-> new UsernameNotFoundException('Employee does not exists.'));
+      WorkflowsSteps workflowsSteps=workflowaStepsRepo.findByWorkflowAndStepOrder(workFlow, 1).orElseThrow(()-> new RuntimeException("Problem in workFlow"));
+      WorkFlowRequests workFlowRequests=WorkFlowRequests.builder()
+                                                        .employee(employee)
+                                                        .currentStep(workflowsSteps)
+                                                        .description(request.getDescription())
+                                                        .title(request.getTitle())
+                                                        .submitedAt(LocalDateTime.now())
+                                                        .requestStatus(RequestStatus.PENDING)
+                                                        .build();
+    workFlowRequestRepo.save(workFlowRequests);
+    ApprovalHistory approvalHistory=ApprovalHistory.builder()
+                                                .user(employee)
+                                                .actionAt(LocalDateTime.now())
+                                                .remark("Request submited")
+                                                .workFlowRequests(workFlowRequests)
+                                                .workflowsSteps(workflowsSteps)
+                                                .action(ApprovalAction.SUBMITED)
+                                                .build();
+    approvalHistoryRepo.save(approvalHistory);
+    return workFlowRequests;
+    }    
 
 }
