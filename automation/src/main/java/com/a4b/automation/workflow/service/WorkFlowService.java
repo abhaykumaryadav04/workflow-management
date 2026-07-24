@@ -95,5 +95,21 @@ public class WorkFlowService {
       return requests;
 
     } 
-
+    public WorkFlowRequests reject(Long requestId ,String remark){
+        WorkFlowRequests request=workFlowRequestRepo.findById(requestId).orElseThrow(()->new RuntimeException("request doesnot exist."));
+        Authentication authentication =
+        SecurityContextHolder.getContext().getAuthentication();
+        User currUser=(User)authentication.getPrincipal();
+        WorkflowsSteps currStep=request.getCurrentStep();
+        ApprovalHistory history=ApprovalHistory.builder() 
+                                                .action(ApprovalAction.REJECTED)
+                                                .actionAt(LocalDateTime.now())
+                                                .remark(remark)
+                                                .user(currUser)
+                                                .workFlowRequests(request)
+                                                .workflowsSteps(currStep)
+                                                .build();
+        approvalHistoryRepo.save(history);
+        
+    }
 }
