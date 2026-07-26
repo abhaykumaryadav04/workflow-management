@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+# Ignore local configuration
+src/main/resources/application.properties
+
+# If your Git repository root is one level above the Spring Boot project,
+# use this instead (or in addition):
+automation/src/main/resources/application.properties
