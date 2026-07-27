@@ -1,5 +1,6 @@
 package com.a4b.automation.workflow.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -9,6 +10,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.a4b.automation.notification.dto.NotificationDto;
+import com.a4b.automation.notification.service.NotificationService;
+import com.a4b.automation.role.entity.Role;
 import com.a4b.automation.user.entity.User;
 import com.a4b.automation.user.repo.UserRepo;
 import com.a4b.automation.workflow.dto.CreateWorkflowRequest;
@@ -38,6 +42,8 @@ public class WorkFlowService {
     private ApprovalHistoryRepo approvalHistoryRepo;
     @Autowired
     private UserRepo userRepo;
+    @Autowired
+    private NotificationService notificationService;
     
     
     public WorkFlowRequests submitRequests(CreateWorkflowRequest request){
@@ -46,13 +52,17 @@ public class WorkFlowService {
       WorkflowsSteps workflowsSteps=workflowaStepsRepo.findByWorkflowAndStepOrder(workFlow, 1).orElseThrow(()-> new RuntimeException("Problem in workFlow"));
       WorkFlowRequests workFlowRequests=WorkFlowRequests.builder()
                                                         .employee(employee)
+                                                        .workFlow(workFlow)
                                                         .currentStep(workflowsSteps)
                                                         .description(request.getDescription())
                                                         .title(request.getTitle())
                                                         .submitedAt(LocalDateTime.now())
                                                         .requestStatus(RequestStatus.PENDING)
                                                         .build();
-    workFlowRequestRepo.save(workFlowRequests);
+   WorkFlowRequests savedRequest= workFlowRequestRepo.save(workFlowRequests);
+   Role nextRole = savedRequest.getCurrentStep().getRole();
+    User manager=userRepo.findByRole(nextRole).orElseThrow(()-> new UsernameNotFoundException("No role like this exists"));
+     notificationService.notifyUser(manager, NotificationDto.builder().message("A new request has created").title("New Request").type("INFO").timeStamp(LocalDateTime.now()).build());
     ApprovalHistory approvalHistory=ApprovalHistory.builder()
                                                 .user(employee)
                                                 .actionAt(LocalDateTime.now())
@@ -62,7 +72,7 @@ public class WorkFlowService {
                                                 .action(ApprovalAction.SUBMITED)
                                                 .build();
     approvalHistoryRepo.save(approvalHistory);
-    return workFlowRequests;
+     return savedRequest;
     }   
     public WorkFlowRequests approve(Long requestId,String remark){
 
@@ -86,12 +96,37 @@ public class WorkFlowService {
                                            .workflowsSteps(currentSteps)
                                            .build();
         approvalHistoryRepo.save(history);
+       
         if(nextStep.isPresent()){
          requests.setCurrentStep(nextStep.get());
          requests.setRequestStatus(RequestStatus.PENDING);
+         Role nextRole = nextStep.get().getRole();
+
+User nextApprover = userRepo.findByRole(nextRole).orElseThrow(()-> new UsernameNotFoundException("No such role present "));
+
+
+notificationService.notifyUser(
+        nextApprover,
+        NotificationDto.builder()
+                .title("Approval Required")
+                .message("A workflow is waiting for your approval.")
+                .type("INFO")
+                .timeStamp(LocalDateTime.now())
+                .build()
+);
         }else{
             requests.setRequestStatus(RequestStatus.APPROVED);
+            notificationService.notifyUser(
+        requests.getEmployee(),
+        NotificationDto.builder()
+                .title("Workflow Approved")
+                .message("Your request has been approved.")
+                .type("SUCCESS")
+                .timeStamp(LocalDateTime.now())
+                .build()
+);
         }
+        workFlowRequestRepo.save(requests);
       return requests;
 
     } 
@@ -110,6 +145,7 @@ public class WorkFlowService {
                                                 .workflowsSteps(currStep)
                                                 .build();
         approvalHistoryRepo.save(history);
+        notificationService.notifyUser(request.getEmployee(),NotificationDto.builder().message(remark).timeStamp(LocalDateTime.now()).title("URGENT").type("INFO").build());
         return request;
     }
 }
