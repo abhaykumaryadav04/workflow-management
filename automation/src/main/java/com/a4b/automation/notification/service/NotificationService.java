@@ -23,7 +23,7 @@ public class NotificationService {
 
   public void notifyUser(User reciever,NotificationDto dto){
       messagingTemplate.convertAndSendToUser(reciever.getPhone(),"/queue/notifications",dto);
-      Notification notification=Notification.builder().message(dto.getMessage()).isRead(false).title(dto.getTitle()).reciver(reciever).build();    
+      Notification notification=Notification.builder().message(dto.getMessage()).isRead(false).title(dto.getTitle()).receiver(reciever).build();    
       notificationRepo.save(notification);
   }
   public List<Notification> getNotifications(User user){
